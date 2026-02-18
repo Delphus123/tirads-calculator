@@ -317,7 +317,7 @@
 <body>
     <header>
         <h1>🩺 Calculadora TIRADS</h1>
-        <p>Avaliação de Nódulos Tireoidianos conforme diretrizes ACR</p>
+        <p>Avaliação de Nódulos Tireoidianos conforme diretrizes do ACR</p>
     </header>
     
     <div class="container">
@@ -348,6 +348,7 @@
             <div class="form-group">
                 <label for="composition">Composição <span class="points-badge" id="compPoints">0 pts</span></label>
                 <select id="composition" onchange="calculateTIRADS()">
+                    <option value="">Selecione...</option>
                     <option value="0">Cístico ou quase completamente cístico</option>
                     <option value="0">Espongiforme</option>
                     <option value="1">Sólido ou quase completamente sólido</option>
@@ -359,6 +360,7 @@
             <div class="form-group">
                 <label for="echogenicity">Ecogenicidade <span class="points-badge" id="echoPoints">0 pts</span></label>
                 <select id="echogenicity" onchange="calculateTIRADS()">
+                    <option value="">Selecione...</option>
                     <option value="0">Anecoico</option>
                     <option value="1">Hiperecoico ou isoecoico</option>
                     <option value="2">Hipocoico</option>
@@ -370,6 +372,7 @@
             <div class="form-group">
                 <label for="shape">Forma <span class="points-badge" id="shapePoints">0 pts</span></label>
                 <select id="shape" onchange="calculateTIRADS()">
+                    <option value="">Selecione...</option>
                     <option value="0">Mais largo que alto</option>
                     <option value="3">Mais alto que largo</option>
                 </select>
@@ -379,6 +382,7 @@
             <div class="form-group">
                 <label for="margin">Margem <span class="points-badge" id="marginPoints">0 pts</span></label>
                 <select id="margin" onchange="calculateTIRADS()">
+                    <option value="">Selecione...</option>
                     <option value="0">Lisa</option>
                     <option value="2">Irregular</option>
                     <option value="2">Lobulada ou microlobulada</option>
@@ -390,6 +394,7 @@
             <div class="form-group">
                 <label for="echogenicFoci">Focos Ecogênicos <span class="points-badge" id="focusPoints">0 pts</span></label>
                 <select id="echogenicFoci" onchange="calculateTIRADS()">
+                    <option value="">Selecione...</option>
                     <option value="0">Nenhum ou artefato de cauda de cometa grande</option>
                     <option value="2">Macrocalcificações</option>
                     <option value="2">Calcificação periférica (rim)</option>
@@ -410,6 +415,10 @@
             </div>
             
             <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="label">Tamanho</div>
+                    <div class="value" id="summarySize">-</div>
+                </div>
                 <div class="summary-item">
                     <div class="label">Composição</div>
                     <div class="value" id="summaryComp">-</div>
@@ -510,12 +519,14 @@
             const total = comp + echo + shape + margin + foci;
             document.getElementById('totalPoints').textContent = total;
             
-            // Update summary
-            document.getElementById('summaryComp').textContent = compositionOptions[document.getElementById('composition').selectedIndex];
-            document.getElementById('summaryEcho').textContent = echogenicityOptions[document.getElementById('echogenicity').selectedIndex];
-            document.getElementById('summaryShape').textContent = shapeOptions[document.getElementById('shape').selectedIndex];
-            document.getElementById('summaryMargin').textContent = marginOptions[document.getElementById('margin').selectedIndex];
-            document.getElementById('summaryFocus').textContent = echogenicFociOptions[document.getElementById('echogenicFoci').selectedIndex];
+            // Update summary (adjust index -1 because first option is empty)
+            const sizeSelect = document.getElementById('noduleSize');
+            document.getElementById('summarySize').textContent = sizeSelect.options[sizeSelect.selectedIndex].text;
+            document.getElementById('summaryComp').textContent = compositionOptions[document.getElementById('composition').selectedIndex - 1] || '-';
+            document.getElementById('summaryEcho').textContent = echogenicityOptions[document.getElementById('echogenicity').selectedIndex - 1] || '-';
+            document.getElementById('summaryShape').textContent = shapeOptions[document.getElementById('shape').selectedIndex - 1] || '-';
+            document.getElementById('summaryMargin').textContent = marginOptions[document.getElementById('margin').selectedIndex - 1] || '-';
+            document.getElementById('summaryFocus').textContent = echogenicFociOptions[document.getElementById('echogenicFoci').selectedIndex - 1] || '-';
             
             // Determine TIRADS category
             let tirads, risk, recommendation;
@@ -558,12 +569,15 @@
                 recommendation = 'Preencha todas as características para obter uma recomendação.';
             }
             
-            // Show result if we have enough data
-            if (document.getElementById('composition').selectedIndex > 0 || 
-                document.getElementById('echogenicity').selectedIndex > 0 ||
-                document.getElementById('shape').selectedIndex > 0 ||
-                document.getElementById('margin').selectedIndex > 0 ||
-                document.getElementById('echogenicFoci').selectedIndex > 0) {
+            // Show result ONLY if ALL fields are filled
+            const compFilled = document.getElementById('composition').selectedIndex > 0;
+            const echoFilled = document.getElementById('echogenicity').selectedIndex > 0;
+            const shapeFilled = document.getElementById('shape').selectedIndex > 0;
+            const marginFilled = document.getElementById('margin').selectedIndex > 0;
+            const fociFilled = document.getElementById('echogenicFoci').selectedIndex > 0;
+            const sizeFilled = document.getElementById('noduleSize').selectedIndex > 0;
+            
+            if (compFilled && echoFilled && shapeFilled && marginFilled && fociFilled && sizeFilled) {
                 
                 document.getElementById('resultCard').style.display = 'block';
                 document.getElementById('tiradsValue').textContent = tirads;
