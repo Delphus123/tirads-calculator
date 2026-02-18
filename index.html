@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora TIRADS - Avaliação de Nódulos Tireoidianos</title>
+    <meta name="description" content="Calculadora TIRADS baseada nas diretrizes do ACR. Avalie o risco de malignidade de nódulos tireoidianos usando características ultrassonográficas.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 0 0 24px 24px;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card h2 .icon {
+            width: 32px;
+            height: 32px;
+            background: var(--gray-100);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--gray-700);
+        }
+        
+        .help-text {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .points-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--gray-100);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .result-card h2 {
+            color: white;
+            justify-content: center;
+        }
+        
+        .tirads-value {
+            font-size: 4rem;
+            font-weight: 700;
+            line-height: 1;
+            margin: 20px 0;
+        }
+        
+        .tirads-label {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .risk-level {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        
+        .risk-low { background: #d1fae5; color: #065f46; }
+        .risk-moderate-low { background: #dbeafe; color: #1e40af; }
+        .risk-moderate { background: #fef3c7; color: #92400e; }
+        .risk-moderate-high { background: #fed7aa; color: #c2410c; }
+        .risk-high { background: #fee2e2; color: #991b1b; }
+        
+        .recommendation {
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .recommendation h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .recommendation p {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .total-points {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .summary-item {
+            background: rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: left;
+        }
+        
+        .summary-item .label {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+        
+        .summary-item .value {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .references {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .references h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--gray-900);
+        }
+        
+        .references ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .references li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 0.9rem;
+            color: var(--gray-700);
+        }
+        
+        .references li:last-child {
+            border-bottom: none;
+        }
+        
+        .references a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .references a:hover {
+            text-decoration: underline;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--gray-500);
+            font-size: 0.875rem;
+        }
+        
+        .disclaimer {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+            font-size: 0.875rem;
+            color: #92400e;
+        }
+        
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+            
+            .tirads-value {
+                font-size: 3rem;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🩺 Calculadora TIRADS</h1>
+        <p>Avaliação de Nódulos Tireoidianos conforme diretrizes ACR</p>
+    </header>
+    
+    <div class="container">
+        <div class="card">
+            <h2><span class="icon">📏</span> Tamanho do Nódulo</h2>
+            <div class="form-group">
+                <label for="noduleSize">Diâmetro máximo (mm)</label>
+                <select id="noduleSize" onchange="calculateTIRADS()">
+                    <option value="">Selecione...</option>
+                    <option value="5">≤ 5 mm</option>
+                    <option value="10">6 - 10 mm</option>
+                    <option value="15">11 - 15 mm</option>
+                    <option value="20">16 - 20 mm</option>
+                    <option value="25">21 - 25 mm</option>
+                    <option value="30">26 - 30 mm</option>
+                    <option value="35">31 - 35 mm</option>
+                    <option value="40">36 - 40 mm</option>
+                    <option value="45">41 - 45 mm</option>
+                    <option value="50">46 - 50 mm</option>
+                    <option value="55">> 50 mm</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2><span class="icon">🔬</span> Características Ultrassonográficas</h2>
+            
+            <div class="form-group">
+                <label for="composition">Composição <span class="points-badge" id="compPoints">0 pts</span></label>
+                <select id="composition" onchange="calculateTIRADS()">
+                    <option value="0">Cístico ou quase completamente cístico</option>
+                    <option value="0">Espongiforme</option>
+                    <option value="1">Sólido ou quase completamente sólido</option>
+                    <option value="2">Misto cístico e sólido</option>
+                </select>
+                <p class="help-text">Escolha a característica predominante da composição do nódulo.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="echogenicity">Ecogenicidade <span class="points-badge" id="echoPoints">0 pts</span></label>
+                <select id="echogenicity" onchange="calculateTIRADS()">
+                    <option value="0">Anecoico</option>
+                    <option value="1">Hiperecoico ou isoecoico</option>
+                    <option value="2">Hipocoico</option>
+                    <option value="3">Muito hipocoico</option>
+                </select>
+                <p class="help-text">Comparação com a ecogenicidade do parênquima tireoidiano normal.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="shape">Forma <span class="points-badge" id="shapePoints">0 pts</span></label>
+                <select id="shape" onchange="calculateTIRADS()">
+                    <option value="0">Mais largo que alto</option>
+                    <option value="3">Mais alto que largo</option>
+                </select>
+                <p class="help-text">Relação entre as dimensões longitudinal e transversa.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="margin">Margem <span class="points-badge" id="marginPoints">0 pts</span></label>
+                <select id="margin" onchange="calculateTIRADS()">
+                    <option value="0">Lisa</option>
+                    <option value="2">Irregular</option>
+                    <option value="2">Lobulada ou microlobulada</option>
+                    <option value="4">Extensão extratireoidiana</option>
+                </select>
+                <p class="help-text">Características da borda do nódulo.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="echogenicFoci">Focos Ecogênicos <span class="points-badge" id="focusPoints">0 pts</span></label>
+                <select id="echogenicFoci" onchange="calculateTIRADS()">
+                    <option value="0">Nenhum ou artefato de cauda de cometa grande</option>
+                    <option value="2">Macrocalcificações</option>
+                    <option value="2">Calcificação periférica (rim)</option>
+                    <option value="4">Focos ecogênicos puntiformes</option>
+                </select>
+                <p class="help-text">Presença de calcificações ou outros focos ecogênicos.</p>
+            </div>
+        </div>
+        
+        <div class="card result-card" id="resultCard" style="display: none;">
+            <h2>Resultado</h2>
+            <div class="tirads-label">Categoria TIRADS</div>
+            <div class="tirads-value" id="tiradsValue">-</div>
+            <div class="risk-level" id="riskLevel">-</div>
+            
+            <div class="total-points">
+                Pontuação total: <span id="totalPoints">0</span> pontos
+            </div>
+            
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="label">Composição</div>
+                    <div class="value" id="summaryComp">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Ecogenicidade</div>
+                    <div class="value" id="summaryEcho">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Forma</div>
+                    <div class="value" id="summaryShape">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Margem</div>
+                    <div class="value" id="summaryMargin">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Focos Ecogênicos</div>
+                    <div class="value" id="summaryFocus">-</div>
+                </div>
+            </div>
+            
+            <div class="recommendation">
+                <h3>📋 Recomendação</h3>
+                <p id="recommendation">-</p>
+            </div>
+        </div>
+        
+        <div class="disclaimer">
+            <strong>⚠️ Aviso Importante:</strong> Esta calculadora é apenas uma ferramenta de apoio à decisão clínica e não substitui o julgamento médico profissional. Os resultados devem ser interpretados por um profissional de saúde qualificado em conjunto com dados clínicos, exames laboratoriais e histórico do paciente.
+        </div>
+        
+        <div class="references">
+            <h2>📚 Referências</h2>
+            <ul>
+                <li>Tessler FN, Middleton WD, Grant EG, et al. ACR Thyroid Imaging, Reporting and Data System (TI-RADS): White Paper of the ACR TI-RADS Committee. <em>J Am Coll Radiol</em>. 2017;14(5):587-595. <a href="https://doi.org/10.1016/j.jacr.2017.01.046" target="_blank">doi:10.1016/j.jacr.2017.01.046</a></li>
+                <li>American College of Radiology. ACR TI-RADS Atlas. <a href="https://www.acr.org/Clinical-Resources/Reporting-and-Data-Systems/TI-RADS" target="_blank">https://www.acr.org/Clinical-Resources/Reporting-and-Data-Systems/TI-RADS</a></li>
+                <li>Shin JH, Baek JH, Chung J, et al. Ultrasonographic Diagnosis and Management of Thyroid Nodules: Korean Society of Thyroid Radiology Consensus and Guidelines. <em>Korean J Radiol</em>. 2016;17(3):370-375. <a href="https://doi.org/10.3348/kjr.2016.17.3.370" target="_blank">doi:10.3348/kjr.2016.17.3.370</a></li>
+                <li>Horvath E, Silva CF, Majlis S, et al. Construction of an Ultrasound-Based Risk Score for Predicting Malignancy of Thyroid Nodules Based on the ACR-TIRADS. <em>Endocrine</em>. 2017;56(1):104-113.</li>
+            </ul>
+        </div>
+        
+        <footer>
+            <p>Calculadora TIRADS © 2026 - Desenvolvida para fins educacionais</p>
+            <p>Baseada nas diretrizes do American College of Radiology (ACR)</p>
+        </footer>
+    </div>
+    
+    <script>
+        const compositionOptions = [
+            "Cístico ou quase completamente cístico",
+            "Espongiforme",
+            "Sólido ou quase completamente sólido",
+            "Misto cístico e sólido"
+        ];
+        
+        const echogenicityOptions = [
+            "Anecoico",
+            "Hiperecoico ou isoecoico",
+            "Hipocoico",
+            "Muito hipocoico"
+        ];
+        
+        const shapeOptions = [
+            "Mais largo que alto",
+            "Mais alto que largo"
+        ];
+        
+        const marginOptions = [
+            "Lisa",
+            "Irregular",
+            "Lobulada ou microlobulada",
+            "Extensão extratireoidiana"
+        ];
+        
+        const echogenicFociOptions = [
+            "Nenhum ou artefato de cauda de cometa grande",
+            "Macrocalcificações",
+            "Calcificação periférica (rim)",
+            "Focos ecogênicos puntiformes"
+        ];
+        
+        function calculateTIRADS() {
+            const comp = parseInt(document.getElementById('composition').value) || 0;
+            const echo = parseInt(document.getElementById('echogenicity').value) || 0;
+            const shape = parseInt(document.getElementById('shape').value) || 0;
+            const margin = parseInt(document.getElementById('margin').value) || 0;
+            const foci = parseInt(document.getElementById('echogenicFoci').value) || 0;
+            const size = parseInt(document.getElementById('noduleSize').value) || 0;
+            
+            // Update points badges
+            document.getElementById('compPoints').textContent = comp + ' pts';
+            document.getElementById('echoPoints').textContent = echo + ' pts';
+            document.getElementById('shapePoints').textContent = shape + ' pts';
+            document.getElementById('marginPoints').textContent = margin + ' pts';
+            document.getElementById('focusPoints').textContent = foci + ' pts';
+            
+            const total = comp + echo + shape + margin + foci;
+            document.getElementById('totalPoints').textContent = total;
+            
+            // Update summary
+            document.getElementById('summaryComp').textContent = compositionOptions[document.getElementById('composition').selectedIndex];
+            document.getElementById('summaryEcho').textContent = echogenicityOptions[document.getElementById('echogenicity').selectedIndex];
+            document.getElementById('summaryShape').textContent = shapeOptions[document.getElementById('shape').selectedIndex];
+            document.getElementById('summaryMargin').textContent = marginOptions[document.getElementById('margin').selectedIndex];
+            document.getElementById('summaryFocus').textContent = echogenicFociOptions[document.getElementById('echogenicFoci').selectedIndex];
+            
+            // Determine TIRADS category
+            let tirads, risk, recommendation;
+            
+            if (total === 0) {
+                tirads = 'TR1';
+                risk = { text: 'Benigno', class: 'risk-low' };
+                recommendation = 'Seguimento routine não necessário. Avaliação clínica recomendada.';
+            } else if (total === 2) {
+                tirads = 'TR2';
+                risk = { text: 'Não Suspeito', class: 'risk-moderate-low' };
+                recommendation = 'Seguimento rotina não necessário. Avaliação clínica recomendada.';
+            } else if (total === 3) {
+                tirads = 'TR3';
+                risk = { text: 'Levemente Suspeito', class: 'risk-moderate' };
+                if (size >= 15) {
+                    recommendation = 'Punção aspirativa com agulha fina (PAAF) recomendada para nódulos ≥15 mm. Seguimento em 12 meses se menor.';
+                } else {
+                    recommendation = 'Seguimento ultrassonográfico em 12 meses. Considerar PAAF se crescimento significativo.';
+                }
+            } else if (total >= 4 && total <= 6) {
+                tirads = 'TR4';
+                risk = { text: 'Moderadamente Suspeito', class: 'risk-moderate-high' };
+                if (size >= 10) {
+                    recommendation = 'PAAF recomendada para nódulos ≥10 mm. Seguimento em 12 meses se menor.';
+                } else {
+                    recommendation = 'Seguimento ultrassonográfico em 12 meses. Considerar PAAF se crescimento significativo.';
+                }
+            } else if (total >= 7) {
+                tirads = 'TR5';
+                risk = { text: 'Altamente Suspeito', class: 'risk-high' };
+                if (size >= 5) {
+                    recommendation = 'PAAF fortemente recomendada para nódulos ≥5 mm. Avaliação multidisciplinar.';
+                } else {
+                    recommendation = 'Considerar PAAF mesmo para nódulos <5 mm se houver fatores de risco. Discussão em reunião multidisciplinary.';
+                }
+            } else {
+                tirads = '-';
+                risk = { text: '-', class: '' };
+                recommendation = 'Preencha todas as características para obter uma recomendação.';
+            }
+            
+            // Show result if we have enough data
+            if (document.getElementById('composition').selectedIndex > 0 || 
+                document.getElementById('echogenicity').selectedIndex > 0 ||
+                document.getElementById('shape').selectedIndex > 0 ||
+                document.getElementById('margin').selectedIndex > 0 ||
+                document.getElementById('echogenicFoci').selectedIndex > 0) {
+                
+                document.getElementById('resultCard').style.display = 'block';
+                document.getElementById('tiradsValue').textContent = tirads;
+                
+                const riskEl = document.getElementById('riskLevel');
+                riskEl.textContent = risk.text;
+                riskEl.className = 'risk-level ' + risk.class;
+                
+                document.getElementById('recommendation').textContent = recommendation;
+                
+                // Scroll to result on mobile
+                if (window.innerWidth < 600) {
+                    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+                }
+            } else {
+                document.getElementById('resultCard').style.display = 'none';
+            }
+        }
+        
+        // Initialize
+        calculateTIRADS();
+    </script>
+</body>
+</html>
